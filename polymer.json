@@ -24,6 +24,8 @@
     {
       "preset": "es5-bundled",
       "name": "bundled",
+      "addServiceWorker": false,
+      "basePath": "chat",
       "bundle": {
         "excludes":[
           "src/bootstrap.js"

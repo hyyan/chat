@@ -1,4 +1,4 @@
-# Simple Chat App Built With Polymer And Firebase
+# Simple Chat App Built With Polymer
 
 By Hyyan Abo Fakher 
 

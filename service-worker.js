@@ -37,7 +37,7 @@
 /* eslint-disable indent, no-unused-vars, no-multiple-empty-lines, max-nested-callbacks, space-before-function-paren, quotes, comma-spacing */
 'use strict';
 
-var precacheConfig = [["bower_components/webcomponentsjs/webcomponents-loader.js","f13bbbbf647b7922575a7894367ddaaf"],["images/favicon.ico","82b34d0faee76b89a9f946763428f668"],["index.html","d19b90cf5b11d5721579c78ece8d7521"],["src/chatroom-app.html","60c9bb0b990975f354f4fd6ec8bafd87"],["src/chatroom-views/chatroom-index-view.html","038ef02c506a85b091a79f8d9c9970f9"],["src/chatroom-views/chatroom-register-view.html","38167ff88e7b83310bb96c064212d4ac"],["src/chatroom-views/chatroom-signin-view.html","77c872cff4c42bfdb9f922dde58372a2"]];
+var precacheConfig = [["bower_components/webcomponentsjs/webcomponents-loader.js","f13bbbbf647b7922575a7894367ddaaf"],["images/favicon.ico","82b34d0faee76b89a9f946763428f668"],["index.html","d6f6c7021b7652f9326ccd64b4d52760"],["src/chatroom-app.html","60c9bb0b990975f354f4fd6ec8bafd87"],["src/chatroom-views/chatroom-index-view.html","038ef02c506a85b091a79f8d9c9970f9"],["src/chatroom-views/chatroom-register-view.html","38167ff88e7b83310bb96c064212d4ac"],["src/chatroom-views/chatroom-signin-view.html","77c872cff4c42bfdb9f922dde58372a2"]];
 var cacheName = 'sw-precache-v3--' + (self.registration ? self.registration.scope : '');
 
 

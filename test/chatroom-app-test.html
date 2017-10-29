@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+  <title>Chatroom App</title>
+
+  <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../bower_components/web-component-tester/browser.js"></script>
+
+  <script src="../bower_components/firebase/firebase.js"></script>
+  <script src="bootstap.js"></script>
+  <script></script>
+
+  <link rel="import" href="../src/chatroom-app.html">
+</head>
+
+<body>
+  <test-fixture id="BasicView">
+    <template>
+      <chatroom-app></chatroom-app>
+    </template>
+  </test-fixture>
+
+  <script>
+
+    describe('chatroom-app tests', function () {
+
+      let app;
+
+      beforeEach(() => {
+        app = fixture('BasicView');
+        return firebase.auth().signOut();
+      });
+
+      
+    });
+  </script>
+</body>
+
+</html>

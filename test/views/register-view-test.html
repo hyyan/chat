@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+  <title>Register View</title>
+
+  <script src="../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../bower_components/web-component-tester/browser.js"></script>
+  <script src="../../bower_components/firebase/firebase.js"></script>
+  <script src="../bootstap.js"></script>
+
+  <link rel="import" href="../../src/chatroom-views/chatroom-register-view.html">
+</head>
+
+<body>
+  <test-fixture id="BasicView">
+    <template>
+      <chatroom-register-view></chatroom-register-view>
+    </template>
+  </test-fixture>
+
+  <script>
+    describe('register-view tests', () => {
+
+      let view;
+
+      beforeEach(() => {
+        view = fixture('BasicView');
+        return firebase.auth().signOut();
+      });
+
+      describe('signin', () => {
+
+        it('sets invalid to true if email or password inputs are invalid', () => {
+
+          let register;
+
+          view.$.email.invalid = true;
+          register = view.register({ type: 'test' });
+          expect(register).to.equal(false);
+          expect(view.invalid).to.equal(true);
+
+          view.$.password.invalid = true;
+          register = view.register({ type: 'test' });
+          expect(register).to.equal(false);
+          expect(view.invalid).to.equal(true);
+        });
+
+        it('clicks submitter when email and password are provided', (done) => {
+
+          view.$.email.value = 'admin';
+          view.$.password.value = 'admin';
+
+          view.$.submitter.addEventListener('click', () => {
+            done();
+          });
+
+          let register = view.register({ type: 'tap' });
+          expect(register).to.equal(true);
+        });
+
+        it('responds to enter key', (done) => {
+
+          view.$.email.value = 'admin';
+          view.$.password.value = 'admin';
+
+          view.$.submitter.addEventListener('click', () => {
+            done();
+          });
+
+          let register = view.register({ type: 'keyup', keyCode: 13 });
+          expect(register).to.equal(true);
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

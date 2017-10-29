@@ -1,0 +1,115 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/custom-style.html">
+<link rel="import" href="../../bower_components/polymer/lib/mixins/gesture-event-listeners.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-password-input/paper-password-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../chatroom-model/chatroom-user-model.html">
+<link rel="import" href="../chatroom-match-validator/chatroom-match-validator.html">
+<link rel="import" href="../chatroom-shared-styles.html">
+
+<dom-module id="chatroom-register-view">
+  <template>
+    <style include="iron-flex iron-flex-alignment chatroom-shared-styles">
+    </style>
+
+    <form id="form" class="dialog" method="post" autocomplete on-submit="_onFormSubmit">
+
+      <paper-input id="email" name="email" label="Email Address" placeholder="Your email address"
+        value="{{email}}" on-keyup="register" autocomplete autofocus auto-validate
+        required>
+        <iron-icon icon="icons:account-circle" slot="prefix"></iron-icon>
+      </paper-input>
+
+      <chatroom-match-validator value="[[password]]">
+      </chatroom-match-validator>
+      <paper-input id="password" type="password" label="Password" placeholder="Your secret address" value="{{password}}"
+        auto-validate required on-keyup="register">
+        <iron-icon icon="icons:lock" slot="prefix"></iron-icon>
+      </paper-input>
+      <paper-input id="confirm" type="password" label="Confirm Password" placeholder="repeat your password"
+        validator="chatroom-match-validator" error-message="Passwords need to match"
+        auto-validate required on-keyup="register">
+        <iron-icon icon="icons:lock" slot="prefix"></iron-icon>
+      </paper-input>
+
+      <button id="submitter" type="submit" style="display: none;"></button>
+
+      <div class="buttons horizontal layout center">
+        <a href="#/signin" class="flex">I have an account</a>
+        <paper-button id="signin" on-tap="register" disabled="{{invalid}}">
+          Register
+        </paper-button>
+      </div>
+    </form>
+  </template>
+
+  <script>
+    ((Chatroom) => {
+
+      Chatroom.RegisterView = class extends Polymer.mixinBehaviors(
+        [Polymer.GestureEventListeners], Polymer.Element
+      ) {
+
+        static get is() { return 'chatroom-register-view'; }
+
+        static get properties() {
+          return {
+
+            email: {
+              type: String,
+            },
+
+            password: {
+              type: String
+            },
+
+            invalid: {
+              type: Boolean,
+              value: false
+            }
+          };
+        }
+
+        register(e) {
+
+          this.invalid = this.$.email.invalid || 
+                        this.$.password.invalid ||
+                        this.$.confirm.invalid;
+
+          // we check if enter key is pressed
+          if (
+            !this.invalid &&
+            ((e.type === 'keyup' && e.keyCode === 13) || e.type === 'tap')
+          ) {
+
+            this.$.submitter.click();
+            return true;
+          }
+
+          return false;
+        }
+
+        /** Interrupt form submit and handle signin */
+        _onFormSubmit(e) {
+
+          e.preventDefault();
+
+          Chatroom.User.register(
+            this.$.email.value,
+            this.$.password.value
+          );
+
+          return false;
+        }
+      }
+
+      window.customElements.define(Chatroom.RegisterView.is, Chatroom.RegisterView);
+
+    })(window.Chatroom = window.Chatroom || {})
+  </script>
+</dom-module>

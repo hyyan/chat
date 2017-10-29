@@ -1,0 +1,208 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
+<link rel="import" href="../bower_components/polymer/lib/mixins/gesture-event-listeners.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-styles/paper-styles.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/gravatar-image/gravatar-image.html">
+
+<link rel="import" href="chatroom-model/chatroom-user-model.html">
+
+<link rel="lazy-import" href="chatroom-views/chatroom-index-view.html">
+<link rel="lazy-import" href="chatroom-views/chatroom-signin-view.html">
+<link rel="lazy-import" href="chatroom-views/chatroom-register-view.html">
+
+<dom-module id="chatroom-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color: #0b4395;
+        --app-secondary-color: rgba(11, 67, 149, 0.82);
+
+        --spinkit-element-color: var(--app-primary-color);
+        --spinkit-element-size: 75px;
+
+        --gravatar-image-iron-image: {
+          border-radius: 50% !important;
+          vertical-align: middle;
+          @apply --shadow-elevation-2dp;
+        }
+
+        display: block;
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+        @apply --shadow-elevation-2dp;
+      }
+
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+
+      paper-menu-button {
+        font-size: 16px;
+      }
+
+      paper-menu-button paper-listbox {
+        min-width: 200px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      paper-menu-button paper-listbox .disabled {
+        color: var(--light-theme-divider-color);
+      }
+
+      paper-toast {
+        background: #f44336;
+        color: white;
+      }
+
+      @media screen and (min-width: 320px) and (max-width: 640px) {
+        paper-menu-button .username {
+          display: none;
+        }
+      }
+    </style>
+
+    <paper-toast id="toast"></paper-toast>
+
+    <app-location route="{{route}}" url-space-regex="^[[rootPath]]" use-hash-as-path>
+    </app-location>
+
+    <app-route route="{{route}}" pattern="[[rootPath]]:page" data="{{routeData}}" tail="{{subroute}}">
+    </app-route>
+
+    <app-header-layout id="layout" fullbleed has-scrolling-region="[[!signedin]]">
+
+      <app-header slot="header" fixed reveals>
+        <app-toolbar>
+          <div main-title>Chatroom App</div>
+          <template is="dom-if" if="[[signedin]]">
+            <paper-menu-button horizontal-align="right" vertical-align="top" no-overlap>
+              <div slot="dropdown-trigger">
+                <span class="username">[[currentUser.email]]</span>
+                <gravatar-image email="[[currentUser.email]]" size="40" fallback="mm">
+                </gravatar-image>
+                <paper-icon-button icon="icons:expand-more">
+                </paper-icon-button>
+              </div>
+
+              <paper-listbox slot="dropdown-content">
+                <paper-item class="disabled">Edit Profile</paper-item>
+                <paper-item on-tap="logout">Logout</paper-item>
+              </paper-listbox>
+            </paper-menu-button>
+          </template>
+        </app-toolbar>
+      </app-header>
+
+      <iron-pages selected="[[page]]" attr-for-selected="name" role="main">
+        <chatroom-index-view name="index"></chatroom-index-view>
+        <chatroom-signin-view name="signin"></chatroom-signin-view>
+        <chatroom-register-view name="register"></chatroom-register-view>
+      </iron-pages>
+    </app-header-layout>
+  </template>
+
+  <script>
+
+    ((Chatroom) => {
+
+      Chatroom.App = class extends Polymer.mixinBehaviors(
+        [Polymer.GestureEventListeners], Polymer.Element
+      ) {
+
+        static get is() { return 'chatroom-app'; }
+
+        static get properties() {
+          return {
+            page: {
+              type: String,
+              reflectToAttribute: true,
+              observer: '_pageChanged',
+            },
+            routeData: Object,
+            subroute: String,
+            rootPath: String,
+            currentUser: Object,
+            signedin: Boolean
+          };
+        }
+
+        static get observers() {
+          return [
+            '_routePageChanged(routeData.page)',
+          ];
+        }
+
+        constructor() {
+
+          super();
+
+          Chatroom.User.observe(
+            (sn) => {
+              this.set('currentUser', sn);
+              this.set('signedin', true);
+              this.set('route.path', '/index');
+            },
+            (sn) => {
+              this.set('currentUser', sn);
+              this.set('signedin', false);
+              this.set('route.path', '/signin');
+            });
+
+          window.addEventListener(
+            'chatroom-error',
+            this._handleError.bind(this)
+          );
+        }
+
+        logout() {
+          Chatroom.User.logout().then(() => {
+            this.set('route.path', 'signin');
+          });
+        }
+
+        _routePageChanged(page) {
+          this.page = page || 'signin';
+        }
+
+        _pageChanged(page) {
+          var resolvedPageUrl = this.resolveUrl('chatroom-views/chatroom-' + page + '-view.html');
+          Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            null,
+            true);
+        }
+
+        _handleError(e) {
+          this.$.toast.show({
+            text: e.detail,
+            duration: 5000
+          });
+        }
+      }
+
+      window.customElements.define(Chatroom.App.is, Chatroom.App);
+
+    })(window.Chatroom = window.Chatroom || {})
+
+  </script>
+</dom-module>

@@ -1,0 +1,234 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-styles/paper-styles.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/polymer/lib/mixins/gesture-event-listeners.html">
+<link rel="import" href="../../bower_components/gravatar-image/gravatar-image.html">
+<link rel="import" href="../../bower_components/spinkit-element/spinkit-element.html">
+<link rel="import" href="../chatroom-model/chatroom-message-model.html">
+<link rel="import" href="../chatroom-shared-styles.html">
+
+<script src="../../bower_components/moment/min/moment.min.js"></script>
+
+<dom-module id="chatroom-index-view">
+  <template>
+    <style include="iron-flex iron-flex-alignment chatroom-shared-styles">
+      :host {
+        display: block;
+      }
+
+      iron-list {
+        height: calc(100vh - 130px);
+        min-height: 500px;
+      }
+
+      spinkit-element {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .message-container {
+        padding: 10px;
+        padding-bottom: 40px;
+      }
+
+      .message-container gravatar-image {
+        margin-right: .5%;
+      }
+
+      .message-container .message {
+        animation: fadein 1s;
+        background: white;
+        padding: 15px;
+        margin-left: 10px;
+        border-radius: 4px;
+        max-width: 400px;
+        position: relative;
+        @apply --shadow-elevation-2dp;
+      }
+
+      .message-container .message.me {
+        background: #edfadf;
+      }
+
+      .message-container .message:after {
+        content: ' ';
+        position: absolute;
+        width: 0;
+        height: 0;
+        left: -15px;
+        right: auto;
+        top: 40px;
+        bottom: auto;
+        border: 12px solid;
+        border-color: white white transparent transparent;
+      }
+
+      .message-container .message.me:after {
+        border-color: #edfadf #edfadf transparent transparent;
+      }
+
+      .message-container .message .user {
+        padding-bottom: 5px;
+        margin-bottom: 5px;
+        border-bottom: thin solid var(--light-theme-divider-color);
+      }
+
+      .message-container .message .content {
+        color: rgba(0, 0, 0, .8)
+      }
+
+      .message-container .message .date {
+        font-size: small;
+        color: #ccc;
+      }
+
+      .send-layout {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 10px;
+        @apply --shadow-elevation-2dp;
+      }
+
+      .send-layout paper-input {
+
+        --paper-input-container-underline: {
+          display: none;
+        }
+
+        --paper-input-container-underline-focus: {
+          display: none;
+        }
+
+        --paper-input-container-underline-disabled: {
+          display: none;
+        }
+      }
+
+      .send-layout paper-icon-button {
+        background: var(--app-primary-color);
+        border-radius: 50%;
+        color: white;
+        --iron-icon: {
+          margin-left: 2px
+        }
+      }
+    </style>
+
+    <spinkit-element id="spinner" name="chasing-dots" active></spinkit-element>
+    <iron-list id="list" items="[[messages]]">
+      <template>
+        <div class$="message-container layout horizontal [[_computeMeClass(item,'end-justified me')]]">
+          <gravatar-image email="[[item.user]]" size="75" fallback="mm"></gravatar-image>
+          <div id="[[item.id]]" class$="flex message [[_computeMeClass(item,'me')]]">
+            <div class="user">[[item.user]]</div>
+            <div class="content">[[item.message]]</div>
+            <div class="layout horizontal end-justified">
+              <div class="date">[[_getTimeDiff(item.timestamp)]]</div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </iron-list>
+
+    <div class="send-layout layout horizontal center">
+      <paper-input id="input" class="flex input" no-label-float placeholder="Say something cool"
+        value="{{message}}" on-keyup="_onSend" autofocus auto-validate required>
+        <iron-icon icon="communication:message" slot="prefix"></iron-icon>
+      </paper-input>
+
+      <paper-icon-button icon="icons:send" on-tap="_onSend"></paper-icon-button>
+
+    </div>
+  </template>
+
+  <script>
+
+    ((Chatroom) => {
+
+      Chatroom.IndexView = class extends Polymer.mixinBehaviors(
+        [Polymer.GestureEventListeners], Polymer.Element
+      ) {
+
+        static get is() { return 'chatroom-index-view'; }
+
+        static get properties() {
+          return {
+            messages: {
+              type: Array,
+              value: []
+            },
+            isLastMessageForMe: Boolean
+          };
+        }
+
+        constructor() {
+          super();
+
+          Chatroom.User.observe(
+            (sn) => {
+              this.set('messages', []);
+              Chatroom.Message.observe(this._onMessagesUpdate.bind(this));
+            });
+        }
+
+        _onMessagesUpdate(messages) {
+
+          this.$.spinner.active = false;
+          this.set('messages', messages);
+          this.$.list.scrollToIndex(messages.length - 1);
+          this.$.list.scrollTop = this.$.list.scrollHeight;
+          this.updateStyles();
+          if (false === this.isLastMessageForMe) {
+            try {
+              let audio = new Audio('tones/whatsapp.mp3');
+              audio.play();
+            } catch (e) {
+              console.log(e)
+            }
+          } else this.isLastMessageForMe = false;
+        }
+
+        _onSend(e) {
+
+          if (
+            !this.$.input.invalid &&
+            ((e.type === 'keyup' && e.keyCode === 13) || e.type === 'tap')
+          ) {
+
+            this.isLastMessageForMe = true;
+            Chatroom.Message.add(this.message);
+            this.message = '';
+            return true;
+          }
+
+          return false;
+        }
+
+        _isMe(message) {
+          return message.user === Chatroom.User.getCurrentUser().email;
+        }
+
+        _computeMeClass(message, trueClass, falseCalse) {
+          return this._isMe(message) ? trueClass : (falseCalse ? falseCalse : '');
+        }
+
+        _getTimeDiff(timestamp) {
+          return moment(timestamp).from(new Date());
+        }
+      }
+
+      window.customElements.define(Chatroom.IndexView.is, Chatroom.IndexView);
+
+    })(window.Chatroom = window.Chatroom || {})
+  </script>
+</dom-module>

@@ -2,7 +2,7 @@
 
 By Hyyan Abo Fakher 
 
-The application hosted [here]()
+**The application is hosted [here](https://hyyan.github.io/chat/)**
 
 ## REQUIREMENTS
 * Latest node (v8.8.1)
